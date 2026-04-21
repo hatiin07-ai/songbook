@@ -1,15 +1,9 @@
-// ============================================
-// 🎵 Songs - 공개 페이지 로직
-// ============================================
-
-console.log('🎵 songs.js 로드됨');
+console.log('songs.js loaded');
 
 function renderStars(level) {
   let html = '';
   for (let i = 1; i <= 5; i++) {
-    html += i <= level 
-      ? '<span style="color:#E87A7A">★</span>' 
-      : '<span style="color:#E0D6D6">★</span>';
+    html += i <= level ? '\u2605' : '\u2606';
   }
   return html;
 }
@@ -21,8 +15,6 @@ function escapeHtml(text) {
 }
 
 async function loadSongs(genre) {
-  console.log('📡 loadSongs 호출됨, genre:', genre);
-  
   const tbody = document.getElementById('songTableBody');
   const emptyState = document.getElementById('emptyState');
   const loadingState = document.getElementById('loadingState');
@@ -36,64 +28,63 @@ async function loadSongs(genre) {
       .eq('genre', genre)
       .order('artist', { ascending: true });
 
-    console.log('📦 응답 data:', data);
-    console.log('❌ 응답 error:', error);
-
-    loadingState.style.display = 'none';
+    // hide loading
+    if (loadingState) loadingState.style.display = 'none';
 
     if (error) throw error;
-
     if (!data || data.length === 0) {
-      emptyState.style.display = 'block';
+      if (emptyState) emptyState.style.display = 'block';
       return;
     }
 
-    console.log('🎵 노래 수:', data.length);
     window._allSongs = data;
+
+    // === DEBUG: 테이블 바깥에 데이터 직접 표시 ===
+    const debugDiv = document.createElement('div');
+    debugDiv.id = 'debugData';
+    debugDiv.style.cssText = 'background:#ffe0e0; padding:20px; margin:20px; border-radius:12px; border:2px solid red;';
+    debugDiv.innerHTML = '<h3 style="color:red; font-size:18px; margin-bottom:10px;">\ud83d\udea8 DEBUG: \ub370\uc774\ud130 \ud655\uc778 (' + data.length + '\uace1)</h3>' +
+      data.map(song => 
+        '<p style="color:#333; font-size:14px; padding:4px 0;">\u2022 <strong>' + escapeHtml(song.artist) + '</strong> - ' + escapeHtml(song.title) + ' ' + renderStars(song.level) + ' ' + escapeHtml(song.memo) + '</p>'
+      ).join('');
+    
+    const main = document.querySelector('main');
+    main.insertBefore(debugDiv, main.firstChild);
+
+    // === 테이블도 렌더링 ===
     renderSongTable(data);
 
     searchInput.addEventListener('input', (e) => {
       const query = e.target.value.toLowerCase().trim();
-      if (!query) {
-        renderSongTable(window._allSongs);
-        return;
-      }
+      if (!query) { renderSongTable(window._allSongs); return; }
       const filtered = window._allSongs.filter(song =>
-        song.artist.toLowerCase().includes(query) ||
-        song.title.toLowerCase().includes(query)
+        song.artist.toLowerCase().includes(query) || song.title.toLowerCase().includes(query)
       );
       renderSongTable(filtered);
     });
 
   } catch (err) {
-    console.error('🚨 에러 발생:', err);
-    loadingState.style.display = 'none';
-    emptyState.style.display = 'block';
+    console.error('Error:', err);
+    if (loadingState) loadingState.style.display = 'none';
+    if (emptyState) emptyState.style.display = 'block';
   }
 }
 
 function renderSongTable(songs) {
-  console.log('🖥️ renderSongTable 호출, songs:', songs?.length);
   const tbody = document.getElementById('songTableBody');
   const emptyState = document.getElementById('emptyState');
-
   if (!songs || songs.length === 0) {
     tbody.innerHTML = '';
-    emptyState.style.display = 'block';
+    if (emptyState) emptyState.style.display = 'block';
     return;
   }
-
-  emptyState.style.display = 'none';
-  
-  const rows = songs.map(song => 
-    '<tr style="border-bottom:1px solid #F5D5D5;">' +
-      '<td style="padding:12px 16px; color:#3D3D3D; font-weight:500;">' + escapeHtml(song.artist) + '</td>' +
-      '<td style="padding:12px 16px; color:#3D3D3D;">' + escapeHtml(song.title) + '</td>' +
-      '<td style="padding:12px 16px; text-align:center;">' + renderStars(song.level) + '</td>' +
-      '<td style="padding:12px 16px; color:#8C8C8C; font-size:0.8rem;">' + escapeHtml(song.memo) + '</td>' +
+  if (emptyState) emptyState.style.display = 'none';
+  tbody.innerHTML = songs.map(song =>
+    '<tr style="border-bottom:1px solid #F5D5D5; background:#fff;">' +
+    '<td style="padding:12px 16px; color:#3D3D3D; font-weight:500;">' + escapeHtml(song.artist) + '</td>' +
+    '<td style="padding:12px 16px; color:#3D3D3D;">' + escapeHtml(song.title) + '</td>' +
+    '<td style="padding:12px 16px; text-align:center; color:#E87A7A;">' + renderStars(song.level) + '</td>' +
+    '<td style="padding:12px 16px; color:#8C8C8C; font-size:0.8rem;">' + escapeHtml(song.memo) + '</td>' +
     '</tr>'
   ).join('');
-  
-  tbody.innerHTML = rows;
-  console.log('✅ tbody.innerHTML 설정 완료, children:', tbody.children.length);
 }
