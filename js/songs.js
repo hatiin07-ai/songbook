@@ -2,6 +2,8 @@
 // 🎵 Songs - 공개 페이지 로직
 // ============================================
 
+console.log('🎵 songs.js 로드됨');
+
 // 별점 HTML 생성
 function renderStars(level) {
   let html = '<span class="star-display">';
@@ -23,29 +25,39 @@ function escapeHtml(text) {
 
 // 노래 목록 로드
 async function loadSongs(genre) {
+  console.log('📡 loadSongs 호출됨, genre:', genre);
+  
   const tbody = document.getElementById('songTableBody');
   const emptyState = document.getElementById('emptyState');
   const loadingState = document.getElementById('loadingState');
   const searchInput = document.getElementById('searchInput');
   
   try {
+    console.log('🔌 Supabase 초기화 중...');
     const sb = initSupabase();
+    console.log('✅ Supabase 클라이언트 생성됨');
+    
+    console.log('📥 데이터 요청 중...');
     const { data, error } = await sb
       .from('songs')
       .select('*')
       .eq('genre', genre)
       .order('artist', { ascending: true });
 
+    console.log('📦 응답 data:', data);
+    console.log('❌ 응답 error:', error);
+
     loadingState.classList.add('hidden');
 
     if (error) throw error;
 
     if (!data || data.length === 0) {
+      console.log('⚠️ 데이터 없음');
       emptyState.classList.remove('hidden');
       return;
     }
 
-    // 전체 데이터 저장 (검색용)
+    console.log('🎵 노래 수:', data.length);
     window._allSongs = data;
     renderSongTable(data);
 
@@ -64,14 +76,15 @@ async function loadSongs(genre) {
     });
 
   } catch (err) {
+    console.error('🚨 에러 발생:', err);
     loadingState.classList.add('hidden');
     emptyState.classList.remove('hidden');
-    console.error('노래 로드 실패:', err);
   }
 }
 
 // 테이블 렌더링
 function renderSongTable(songs) {
+  console.log('🖥️ renderSongTable 호출, songs:', songs?.length);
   const tbody = document.getElementById('songTableBody');
   const emptyState = document.getElementById('emptyState');
 
