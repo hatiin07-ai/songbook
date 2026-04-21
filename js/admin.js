@@ -1,81 +1,56 @@
 // ============================================
-// 🔐 Admin - 관리자 페이지 로직
+// \ud83d\udd10 Admin - \uad00\ub9ac\uc790 \ud398\uc774\uc9c0 \ub85c\uc9c1
 // ============================================
 
 let currentGenre = 'kpop';
 let currentUser = null;
 
-// ---- 초기화 ----
 document.addEventListener('DOMContentLoaded', async () => {
   const sb = initSupabase();
-
-  // 세션 확인
   const { data: { session } } = await sb.auth.getSession();
   if (session) {
     currentUser = session.user;
     showAdminScreen();
   }
 
-  // 로그인 폼
   document.getElementById('loginForm').addEventListener('submit', handleLogin);
-  
-  // 로그아웃
   document.getElementById('logoutBtn').addEventListener('click', handleLogout);
-
-  // 장르 탭
   document.querySelectorAll('.genre-tab').forEach(tab => {
     tab.addEventListener('click', () => switchGenre(tab.dataset.genre));
   });
-
-  // 노래 추가 폼
   document.getElementById('addSongForm').addEventListener('submit', handleAddSong);
-
-  // 별점 (추가 폼)
   setupStarRating('inputStars', 'inputLevel');
-
-  // 별점 (수정 모달)
   setupStarRating('editStars', 'editLevel');
-
-  // 수정 모달 닫기
   document.getElementById('editCancel').addEventListener('click', closeEditModal);
-
-  // 수정 폼
   document.getElementById('editForm').addEventListener('submit', handleEditSong);
 });
 
-// ---- 로그인 ----
 async function handleLogin(e) {
   e.preventDefault();
   const sb = initSupabase();
   const email = document.getElementById('loginEmail').value;
   const password = document.getElementById('loginPassword').value;
   const errorEl = document.getElementById('loginError');
-
   errorEl.classList.add('hidden');
-
   const { data, error } = await sb.auth.signInWithPassword({ email, password });
-
   if (error) {
-    errorEl.textContent = '로그인 실패: 이메일 또는 비밀번호를 확인하세요';
+    errorEl.textContent = '\ub85c\uadf8\uc778 \uc2e4\ud328: \uc774\uba54\uc77c \ub610\ub294 \ube44\ubc00\ubc88\ud638\ub97c \ud655\uc778\ud558\uc138\uc694';
     errorEl.classList.remove('hidden');
     return;
   }
-
   currentUser = data.user;
   showAdminScreen();
 }
 
-// ---- 로그아웃 ----
 async function handleLogout() {
   const sb = initSupabase();
   await sb.auth.signOut();
   currentUser = null;
   document.getElementById('loginScreen').classList.remove('hidden');
   document.getElementById('adminScreen').classList.add('hidden');
-  showToast('로그아웃 되었습니다');
+  showToast('\ub85c\uadf8\uc544\uc6c3 \ub418\uc5c8\uc2b5\ub2c8\ub2e4');
 }
 
-// ---- Admin 화면 표시 ----
 function showAdminScreen() {
   document.getElementById('loginScreen').classList.add('hidden');
   document.getElementById('adminScreen').classList.remove('hidden');
@@ -83,7 +58,6 @@ function showAdminScreen() {
   loadAdminSongs();
 }
 
-// ---- 장르 전환 ----
 function switchGenre(genre) {
   currentGenre = genre;
   document.querySelectorAll('.genre-tab').forEach(tab => {
@@ -92,7 +66,6 @@ function switchGenre(genre) {
   loadAdminSongs();
 }
 
-// ---- 노래 목록 로드 (Admin) ----
 async function loadAdminSongs() {
   const sb = initSupabase();
   const tbody = document.getElementById('adminSongBody');
@@ -106,6 +79,7 @@ async function loadAdminSongs() {
     .from('songs')
     .select('*')
     .eq('genre', currentGenre)
+    .order('is_signature', { ascending: false })
     .order('artist', { ascending: true });
 
   loadingEl.classList.add('hidden');
@@ -116,58 +90,76 @@ async function loadAdminSongs() {
     return;
   }
 
-  tbody.innerHTML = data.map(song => `
-    <tr class="border-b border-point/10">
-      <td class="px-4 py-3 text-txt font-medium">${escapeHtml(song.artist)}</td>
-      <td class="px-4 py-3 text-txt">${escapeHtml(song.title)}</td>
-      <td class="px-4 py-3 text-center">${renderStarsAdmin(song.level)}</td>
-      <td class="px-4 py-3 text-sub text-xs">${escapeHtml(song.memo)}</td>
-      <td class="px-4 py-3 text-center">
-        <div class="flex gap-1 justify-center">
-          <button class="btn-edit" onclick="openEditModal(${song.id}, '${escapeAttr(song.artist)}', '${escapeAttr(song.title)}', ${song.level}, '${escapeAttr(song.memo)}')">수정</button>
-          <button class="btn-delete" onclick="deleteSong(${song.id})">삭제</button>
-        </div>
-      </td>
-    </tr>
-  `).join('');
+  tbody.innerHTML = data.map(song => {
+    const sigBg = song.is_signature ? 'background:#FFF0ED;' : '';
+    const sigBadge = song.is_signature ? '<span style="background:#D4727A; color:#fff; font-size:0.65rem; padding:2px 6px; border-radius:8px; margin-left:4px;">\ud83c\udf80 \uc2dc\uadf8\ub2c8\ucc98</span>' : '';
+    const sigBtnText = song.is_signature ? '\u2606 \ud574\uc81c' : '\u2605 \uc2dc\uadf8\ub2c8\ucc98';
+    const sigBtnStyle = song.is_signature 
+      ? 'background:#FFF0ED; color:#D4727A; border:1px solid #E8A0A0;'
+      : 'background:#fff; color:#8C8C8C; border:1px solid #ddd;';
+    
+    return '<tr style="border-bottom:1px solid rgba(232,160,160,0.15); ' + sigBg + '">' +
+      '<td style="padding:12px 16px; color:#3D3D3D; font-weight:500;">' + escapeHtml(song.artist) + sigBadge + '</td>' +
+      '<td style="padding:12px 16px; color:#3D3D3D;">' + escapeHtml(song.title) + '</td>' +
+      '<td style="padding:12px 16px; text-align:center;">' + renderStarsAdmin(song.level) + '</td>' +
+      '<td style="padding:12px 16px; color:#8C8C8C; font-size:0.8rem;">' + escapeHtml(song.memo) + '</td>' +
+      '<td style="padding:12px 16px; text-align:center;">' +
+        '<div style="display:flex; gap:4px; justify-content:center; flex-wrap:wrap;">' +
+          '<button style="' + sigBtnStyle + ' font-size:0.7rem; padding:3px 8px; border-radius:6px; cursor:pointer; white-space:nowrap;" onclick="toggleSignature(' + song.id + ', ' + !song.is_signature + ')">' + sigBtnText + '</button>' +
+          '<button class="btn-edit" onclick="openEditModal(' + song.id + ', \'' + escapeAttr(song.artist) + '\', \'' + escapeAttr(song.title) + '\', ' + song.level + ', \'' + escapeAttr(song.memo) + '\', ' + (song.is_signature || false) + ')">\uc218\uc815</button>' +
+          '<button class="btn-delete" onclick="deleteSong(' + song.id + ')">\uc0ad\uc81c</button>' +
+        '</div>' +
+      '</td>' +
+    '</tr>';
+  }).join('');
 }
 
-// ---- 노래 추가 ----
+// \uc2dc\uadf8\ub2c8\ucc98 \ud1a0\uae00
+async function toggleSignature(id, value) {
+  const sb = initSupabase();
+  const { error } = await sb.from('songs').update({ is_signature: value }).eq('id', id);
+  if (error) {
+    showToast('\uc2e4\ud328: ' + error.message);
+    return;
+  }
+  showToast(value ? '\ud83c\udf80 \uc2dc\uadf8\ub2c8\ucc98 \uace1\uc73c\ub85c \uc124\uc815!' : '\uc2dc\uadf8\ub2c8\ucc98 \ud574\uc81c');
+  loadAdminSongs();
+}
+
 async function handleAddSong(e) {
   e.preventDefault();
   const sb = initSupabase();
+  const isSignature = document.getElementById('inputSignature')?.checked || false;
 
   const song = {
     genre: currentGenre,
     artist: document.getElementById('inputArtist').value.trim(),
     title: document.getElementById('inputTitle').value.trim(),
     level: parseInt(document.getElementById('inputLevel').value),
-    memo: document.getElementById('inputMemo').value.trim()
+    memo: document.getElementById('inputMemo').value.trim(),
+    is_signature: isSignature
   };
 
   const { error } = await sb.from('songs').insert([song]);
+  if (error) { showToast('\ucd94\uac00 \uc2e4\ud328: ' + error.message); return; }
 
-  if (error) {
-    showToast('추가 실패: ' + error.message);
-    return;
-  }
-
-  // 폼 리셋
   document.getElementById('addSongForm').reset();
   document.getElementById('inputLevel').value = '0';
+  if (document.getElementById('inputSignature')) document.getElementById('inputSignature').checked = false;
   resetStars('inputStars');
-  
-  showToast('✅ 노래가 추가되었습니다');
+  showToast('\u2705 \ub178\ub798\uac00 \ucd94\uac00\ub418\uc5c8\uc2b5\ub2c8\ub2e4');
   loadAdminSongs();
 }
 
-// ---- 수정 모달 ----
-function openEditModal(id, artist, title, level, memo) {
+function openEditModal(id, artist, title, level, memo, isSignature) {
   document.getElementById('editId').value = id;
   document.getElementById('editArtist').value = artist;
   document.getElementById('editTitle').value = title;
   document.getElementById('editLevel').value = level;
   document.getElementById('editMemo').value = memo;
+  if (document.getElementById('editSignature')) {
+    document.getElementById('editSignature').checked = isSignature || false;
+  }
   setStars('editStars', level);
   document.getElementById('editModal').classList.remove('hidden');
 }
@@ -180,98 +172,75 @@ async function handleEditSong(e) {
   e.preventDefault();
   const sb = initSupabase();
   const id = document.getElementById('editId').value;
+  const isSignature = document.getElementById('editSignature')?.checked || false;
 
   const updates = {
     artist: document.getElementById('editArtist').value.trim(),
     title: document.getElementById('editTitle').value.trim(),
     level: parseInt(document.getElementById('editLevel').value),
-    memo: document.getElementById('editMemo').value.trim()
+    memo: document.getElementById('editMemo').value.trim(),
+    is_signature: isSignature
   };
 
   const { error } = await sb.from('songs').update(updates).eq('id', id);
-
-  if (error) {
-    showToast('수정 실패: ' + error.message);
-    return;
-  }
-
+  if (error) { showToast('\uc218\uc815 \uc2e4\ud328: ' + error.message); return; }
   closeEditModal();
-  showToast('✅ 노래가 수정되었습니다');
+  showToast('\u2705 \ub178\ub798\uac00 \uc218\uc815\ub418\uc5c8\uc2b5\ub2c8\ub2e4');
   loadAdminSongs();
 }
 
-// ---- 노래 삭제 ----
 async function deleteSong(id) {
-  if (!confirm('정말 삭제하시겠습니까?')) return;
-
+  if (!confirm('\uc815\ub9d0 \uc0ad\uc81c\ud558\uc2dc\uaca0\uc2b5\ub2c8\uae4c?')) return;
   const sb = initSupabase();
   const { error } = await sb.from('songs').delete().eq('id', id);
-
-  if (error) {
-    showToast('삭제 실패: ' + error.message);
-    return;
-  }
-
-  showToast('🗑️ 삭제되었습니다');
+  if (error) { showToast('\uc0ad\uc81c \uc2e4\ud328: ' + error.message); return; }
+  showToast('\ud83d\uddd1\ufe0f \uc0ad\uc81c\ub418\uc5c8\uc2b5\ub2c8\ub2e4');
   loadAdminSongs();
 }
 
-// ---- 별점 UI ----
+// \ubcc4\uc810 UI
 function setupStarRating(containerId, hiddenInputId) {
   const container = document.getElementById(containerId);
   const stars = container.querySelectorAll('.star');
-
   stars.forEach(star => {
     star.addEventListener('click', () => {
       const value = parseInt(star.dataset.value);
       document.getElementById(hiddenInputId).value = value;
       setStars(containerId, value);
     });
-
     star.addEventListener('mouseenter', () => {
-      const value = parseInt(star.dataset.value);
-      highlightStars(containerId, value);
+      highlightStars(containerId, parseInt(star.dataset.value));
     });
   });
-
   container.addEventListener('mouseleave', () => {
-    const current = parseInt(document.getElementById(hiddenInputId).value);
-    setStars(containerId, current);
+    setStars(containerId, parseInt(document.getElementById(hiddenInputId).value));
   });
 }
 
 function setStars(containerId, value) {
-  const stars = document.getElementById(containerId).querySelectorAll('.star');
-  stars.forEach(star => {
+  document.getElementById(containerId).querySelectorAll('.star').forEach(star => {
     const v = parseInt(star.dataset.value);
-    star.classList.toggle('active', v <= value);
     star.style.color = v <= value ? '#E87A7A' : '#E0D6D6';
   });
 }
 
 function highlightStars(containerId, value) {
-  const stars = document.getElementById(containerId).querySelectorAll('.star');
-  stars.forEach(star => {
-    const v = parseInt(star.dataset.value);
-    star.style.color = v <= value ? '#E87A7A' : '#E0D6D6';
+  document.getElementById(containerId).querySelectorAll('.star').forEach(star => {
+    star.style.color = parseInt(star.dataset.value) <= value ? '#E87A7A' : '#E0D6D6';
   });
 }
 
 function resetStars(containerId) {
-  const stars = document.getElementById(containerId).querySelectorAll('.star');
-  stars.forEach(star => {
-    star.classList.remove('active');
+  document.getElementById(containerId).querySelectorAll('.star').forEach(star => {
     star.style.color = '#E0D6D6';
   });
 }
 
-// ---- 유틸리티 ----
 function renderStarsAdmin(level) {
-  let html = '<span class="star-display">';
+  let html = '';
   for (let i = 1; i <= 5; i++) {
-    html += i <= level ? '<span class="star-on">★</span>' : '<span class="star-off">★</span>';
+    html += i <= level ? '<span style="color:#E87A7A">\u2605</span>' : '<span style="color:#E0D6D6">\u2605</span>';
   }
-  html += '</span>';
   return html;
 }
 
