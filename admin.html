@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🔐 Admin - 노래책</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            bg: '#FFF8F6', card: '#FFF0ED', point: '#E8A0A0', accent: '#D4727A',
+            txt: '#3D3D3D', sub: '#8C8C8C', thead: '#F5D5D5', starOn: '#E87A7A', starOff: '#E0D6D6',
+          },
+          fontFamily: { sans: ['Pretendard', 'sans-serif'], poppins: ['Poppins', 'sans-serif'] }
+        }
+      }
+    }
+  </script>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="bg-bg min-h-screen font-sans">
+
+  <!-- ==================== LOGIN SCREEN ==================== -->
+  <div id="loginScreen" class="min-h-screen flex items-center justify-center px-4">
+    <div class="bg-white rounded-2xl shadow-lg p-8 w-full max-w-sm border border-point/20">
+      <h1 class="text-2xl font-bold text-txt text-center mb-2">🔐 Admin</h1>
+      <p class="text-sub text-sm text-center mb-6">관리자 로그인</p>
+      <form id="loginForm" class="space-y-4">
+        <div>
+          <label class="block text-sm text-txt mb-1">이메일</label>
+          <input type="email" id="loginEmail" required
+                 class="w-full px-4 py-2.5 rounded-xl border border-point/30 bg-bg
+                        focus:outline-none focus:ring-2 focus:ring-accent/30 text-sm">
+        </div>
+        <div>
+          <label class="block text-sm text-txt mb-1">비밀번호</label>
+          <input type="password" id="loginPassword" required
+                 class="w-full px-4 py-2.5 rounded-xl border border-point/30 bg-bg
+                        focus:outline-none focus:ring-2 focus:ring-accent/30 text-sm">
+        </div>
+        <div id="loginError" class="hidden text-red-400 text-xs text-center"></div>
+        <button type="submit"
+                class="w-full py-2.5 bg-accent text-white rounded-xl font-semibold
+                       hover:bg-accent/80 transition-colors text-sm">
+          로그인
+        </button>
+      </form>
+      <a href="index.html" class="block text-center text-sub text-xs mt-4 hover:text-accent">← 메인으로 돌아가기</a>
+    </div>
+  </div>
+
+  <!-- ==================== ADMIN DASHBOARD ==================== -->
+  <div id="adminScreen" class="hidden">
+    
+    <!-- Header -->
+    <header class="sticky top-0 z-50 bg-bg/95 backdrop-blur-sm border-b border-point/20">
+      <div class="max-w-5xl mx-auto px-4 py-4 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <a href="index.html" class="text-accent hover:text-accent/70 transition-colors text-lg">←</a>
+          <h1 class="text-xl font-bold text-txt">🔐 <span class="font-poppins">Admin</span></h1>
+        </div>
+        <div class="flex items-center gap-3">
+          <span id="userEmail" class="text-sub text-xs hidden md:inline"></span>
+          <button id="logoutBtn"
+                  class="px-4 py-1.5 text-xs bg-white border border-point/30 text-sub rounded-lg
+                         hover:bg-card transition-colors">
+            로그아웃
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <main class="max-w-5xl mx-auto px-4 py-6">
+
+      <!-- Genre Tabs -->
+      <div class="flex gap-2 mb-6">
+        <button class="genre-tab active" data-genre="kpop">🎀 Kpop</button>
+        <button class="genre-tab" data-genre="jpop">🌸 Jpop</button>
+        <button class="genre-tab" data-genre="pop">🎶 Pop</button>
+      </div>
+
+      <!-- Add Song Form -->
+      <div class="bg-white rounded-2xl shadow-sm border border-point/20 p-6 mb-6">
+        <h2 class="font-semibold text-txt mb-4">✏️ 노래 추가</h2>
+        <form id="addSongForm" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm text-txt mb-1">가수</label>
+            <input type="text" id="inputArtist" required
+                   class="w-full px-4 py-2 rounded-xl border border-point/30 bg-bg
+                          focus:outline-none focus:ring-2 focus:ring-accent/30 text-sm">
+          </div>
+          <div>
+            <label class="block text-sm text-txt mb-1">제목</label>
+            <input type="text" id="inputTitle" required
+                   class="w-full px-4 py-2 rounded-xl border border-point/30 bg-bg
+                          focus:outline-none focus:ring-2 focus:ring-accent/30 text-sm">
+          </div>
+          <div>
+            <label class="block text-sm text-txt mb-1">숙련도</label>
+            <div id="inputStars" class="star-rating flex gap-1 py-2">
+              <span class="star text-2xl cursor-pointer text-starOff" data-value="1">★</span>
+              <span class="star text-2xl cursor-pointer text-starOff" data-value="2">★</span>
+              <span class="star text-2xl cursor-pointer text-starOff" data-value="3">★</span>
+              <span class="star text-2xl cursor-pointer text-starOff" data-value="4">★</span>
+              <span class="star text-2xl cursor-pointer text-starOff" data-value="5">★</span>
+            </div>
+            <input type="hidden" id="inputLevel" value="0">
+          </div>
+          <div>
+            <label class="block text-sm text-txt mb-1">메모</label>
+            <input type="text" id="inputMemo" placeholder="(선택)"
+                   class="w-full px-4 py-2 rounded-xl border border-point/30 bg-bg
+                          focus:outline-none focus:ring-2 focus:ring-accent/30 text-sm">
+          </div>
+          <div class="md:col-span-2">
+            <button type="submit"
+                    class="px-6 py-2.5 bg-accent text-white rounded-xl font-semibold
+                           hover:bg-accent/80 transition-colors text-sm">
+              ➕ 추가하기
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <!-- Song List (Admin) -->
+      <div class="bg-white rounded-2xl shadow-sm border border-point/20 overflow-hidden">
+        <div class="overflow-x-auto">
+          <table class="w-full text-sm">
+            <thead class="bg-thead">
+              <tr>
+                <th class="text-left px-4 py-3 font-semibold text-txt">가수</th>
+                <th class="text-left px-4 py-3 font-semibold text-txt">제목</th>
+                <th class="text-center px-4 py-3 font-semibold text-txt">숙련도</th>
+                <th class="text-left px-4 py-3 font-semibold text-txt">메모</th>
+                <th class="text-center px-4 py-3 font-semibold text-txt w-24">관리</th>
+              </tr>
+            </thead>
+            <tbody id="adminSongBody"></tbody>
+          </table>
+        </div>
+        <div id="adminEmpty" class="hidden text-center py-12">
+          <p class="text-sub">등록된 노래가 없습니다</p>
+        </div>
+        <div id="adminLoading" class="text-center py-12">
+          <div class="inline-block w-6 h-6 border-2 border-point border-t-transparent rounded-full animate-spin"></div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+
+  <!-- Edit Modal -->
+  <div id="editModal" class="hidden fixed inset-0 z-[100] flex items-center justify-center bg-black/40 px-4">
+    <div class="bg-white rounded-2xl shadow-xl p-6 w-full max-w-md border border-point/20">
+      <h2 class="font-semibold text-txt mb-4">✏️ 노래 수정</h2>
+      <form id="editForm" class="space-y-4">
+        <input type="hidden" id="editId">
+        <div>
+          <label class="block text-sm text-txt mb-1">가수</label>
+          <input type="text" id="editArtist" required
+                 class="w-full px-4 py-2 rounded-xl border border-point/30 bg-bg
+                        focus:outline-none focus:ring-2 focus:ring-accent/30 text-sm">
+        </div>
+        <div>
+          <label class="block text-sm text-txt mb-1">제목</label>
+          <input type="text" id="editTitle" required
+                 class="w-full px-4 py-2 rounded-xl border border-point/30 bg-bg
+                        focus:outline-none focus:ring-2 focus:ring-accent/30 text-sm">
+        </div>
+        <div>
+          <label class="block text-sm text-txt mb-1">숙련도</label>
+          <div id="editStars" class="star-rating flex gap-1 py-2">
+            <span class="star text-2xl cursor-pointer text-starOff" data-value="1">★</span>
+            <span class="star text-2xl cursor-pointer text-starOff" data-value="2">★</span>
+            <span class="star text-2xl cursor-pointer text-starOff" data-value="3">★</span>
+            <span class="star text-2xl cursor-pointer text-starOff" data-value="4">★</span>
+            <span class="star text-2xl cursor-pointer text-starOff" data-value="5">★</span>
+          </div>
+          <input type="hidden" id="editLevel" value="0">
+        </div>
+        <div>
+          <label class="block text-sm text-txt mb-1">메모</label>
+          <input type="text" id="editMemo"
+                 class="w-full px-4 py-2 rounded-xl border border-point/30 bg-bg
+                        focus:outline-none focus:ring-2 focus:ring-accent/30 text-sm">
+        </div>
+        <div class="flex gap-2">
+          <button type="submit"
+                  class="flex-1 py-2.5 bg-accent text-white rounded-xl font-semibold
+                         hover:bg-accent/80 transition-colors text-sm">
+            저장
+          </button>
+          <button type="button" id="editCancel"
+                  class="flex-1 py-2.5 bg-white border border-point/30 text-sub rounded-xl
+                         hover:bg-card transition-colors text-sm">
+            취소
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/supabase-config.js"></script>
+  <script src="js/admin.js"></script>
+</body>
+</html>

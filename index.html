@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🎵 노래책</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://cdn.jsdelivr.net">
+  <link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            bg: '#FFF8F6',
+            card: '#FFF0ED',
+            point: '#E8A0A0',
+            accent: '#D4727A',
+            txt: '#3D3D3D',
+            sub: '#8C8C8C',
+            thead: '#F5D5D5',
+            starOn: '#E87A7A',
+            starOff: '#E0D6D6',
+          },
+          fontFamily: {
+            sans: ['Pretendard', 'sans-serif'],
+            poppins: ['Poppins', 'sans-serif'],
+          }
+        }
+      }
+    }
+  </script>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="bg-bg min-h-screen font-sans">
+
+  <!-- Header -->
+  <header class="pt-10 pb-6 text-center">
+    <h1 class="text-3xl md:text-4xl font-bold text-txt">
+      🎵 <span class="font-poppins">Songbook</span>
+    </h1>
+    <p class="text-sub mt-2 text-sm md:text-base">노래 목록을 확인하고 신청해보세요!</p>
+  </header>
+
+  <!-- Banner Section -->
+  <main class="max-w-4xl mx-auto px-4 pb-16 space-y-5">
+
+    <!-- Kpop Banner -->
+    <a href="kpop.html" class="banner-card block relative overflow-hidden rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 group">
+      <div class="banner-img-wrapper aspect-[16/5] md:aspect-[16/4] w-full overflow-hidden">
+        <picture>
+          <source srcset="assets/images/kpop-banner.webp" type="image/webp">
+          <img src="assets/images/kpop-banner.jpg" alt="Kpop" 
+               class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+        </picture>
+      </div>
+      <div class="absolute inset-0 bg-gradient-to-r from-black/40 via-black/20 to-transparent flex items-center pl-8 md:pl-12">
+        <div>
+          <span class="font-poppins text-3xl md:text-5xl font-bold text-white drop-shadow-lg">Kpop</span>
+          <p class="text-white/80 text-sm md:text-base mt-1 drop-shadow">🎀 케이팝 노래 모음</p>
+        </div>
+      </div>
+    </a>
+
+    <!-- Jpop Banner -->
+    <a href="jpop.html" class="banner-card block relative overflow-hidden rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 group">
+      <div class="banner-img-wrapper aspect-[16/5] md:aspect-[16/4] w-full overflow-hidden">
+        <img src="assets/images/jpop-banner.png" alt="Jpop"
+             class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+      </div>
+      <div class="absolute inset-0 bg-gradient-to-r from-black/40 via-black/20 to-transparent flex items-center pl-8 md:pl-12">
+        <div>
+          <span class="font-poppins text-3xl md:text-5xl font-bold text-white drop-shadow-lg">Jpop</span>
+          <p class="text-white/80 text-sm md:text-base mt-1 drop-shadow">🌸 제이팝 노래 모음</p>
+        </div>
+      </div>
+    </a>
+
+    <!-- Pop Banner -->
+    <a href="pop.html" class="banner-card block relative overflow-hidden rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 group">
+      <div class="banner-img-wrapper aspect-[16/5] md:aspect-[16/4] w-full overflow-hidden">
+        <picture>
+          <source srcset="assets/images/pop-banner.webp" type="image/webp">
+          <img src="assets/images/pop-banner.jpg" alt="Pop"
+               class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+        </picture>
+      </div>
+      <div class="absolute inset-0 bg-gradient-to-r from-black/40 via-black/20 to-transparent flex items-center pl-8 md:pl-12">
+        <div>
+          <span class="font-poppins text-3xl md:text-5xl font-bold text-white drop-shadow-lg">Pop</span>
+          <p class="text-white/80 text-sm md:text-base mt-1 drop-shadow">🎶 팝 노래 모음</p>
+        </div>
+      </div>
+    </a>
+
+  </main>
+
+  <!-- Footer -->
+  <footer class="text-center py-6 text-sub text-xs">
+    <p>© 2025 Songbook · Made with 💖</p>
+  </footer>
+
+</body>
+</html>
