@@ -44,6 +44,14 @@
   color: #E87A7A !important;
 }
 
+/* ---- Table Header Sort ---- */
+table thead th[data-sort-key] {
+  transition: background-color 0.15s ease;
+}
+table thead th[data-sort-key]:hover {
+  background-color: #F0C8C8;
+}
+
 /* ---- Table Zebra Stripe ---- */
 table tbody tr:nth-child(even) {
   background-color: #FFF8F6;

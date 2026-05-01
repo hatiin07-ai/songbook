@@ -2,6 +2,9 @@
 // 🎵 Songs - 공개 페이지 로직
 // ============================================
 
+// 정렬 상태
+let currentSort = { key: 'artist', dir: 'asc' };
+
 function renderStars(level) {
   let html = '';
   for (let i = 1; i <= 5; i++) {
@@ -76,14 +79,17 @@ async function loadSongs(genre) {
     window._allSongs = regularSongs;
     renderSongTable(regularSongs);
 
+    // 정렬 헤더 초기화
+    setupSortHeaders();
+
     // 검색 기능
     searchInput.addEventListener('input', (e) => {
       const query = e.target.value.toLowerCase().trim();
-      if (!query) { renderSongTable(window._allSongs); return; }
+      if (!query) { renderSongTable(sortSongs(window._allSongs)); return; }
       const filtered = window._allSongs.filter(song =>
         song.artist.toLowerCase().includes(query) || song.title.toLowerCase().includes(query)
       );
-      renderSongTable(filtered);
+      renderSongTable(sortSongs(filtered));
     });
 
   } catch (err) {
@@ -91,6 +97,87 @@ async function loadSongs(genre) {
     if (loadingState) loadingState.style.display = 'none';
     if (emptyState) emptyState.style.display = 'block';
   }
+}
+
+// 정렬 헤더 셋업
+function setupSortHeaders() {
+  const headers = document.querySelectorAll('thead th');
+  const sortKeys = ['artist', 'title', 'level', null]; // 메모는 정렬 없음
+
+  headers.forEach((th, idx) => {
+    const key = sortKeys[idx];
+    if (!key) return;
+
+    th.style.cursor = 'pointer';
+    th.style.userSelect = 'none';
+    th.setAttribute('data-sort-key', key);
+
+    // 화살표 추가
+    const arrow = document.createElement('span');
+    arrow.className = 'sort-arrow';
+    arrow.style.marginLeft = '4px';
+    arrow.style.fontSize = '0.7rem';
+    arrow.style.opacity = '0.4';
+    arrow.textContent = '▲▼';
+    th.appendChild(arrow);
+
+    th.addEventListener('click', () => {
+      if (currentSort.key === key) {
+        currentSort.dir = currentSort.dir === 'asc' ? 'desc' : 'asc';
+      } else {
+        currentSort.key = key;
+        currentSort.dir = 'asc';
+      }
+      updateSortArrows();
+      applySort();
+    });
+  });
+
+  updateSortArrows();
+}
+
+// 화살표 표시 업데이트
+function updateSortArrows() {
+  document.querySelectorAll('thead th[data-sort-key]').forEach(th => {
+    const arrow = th.querySelector('.sort-arrow');
+    if (!arrow) return;
+    const key = th.getAttribute('data-sort-key');
+    if (key === currentSort.key) {
+      arrow.style.opacity = '1';
+      arrow.textContent = currentSort.dir === 'asc' ? '▲' : '▼';
+    } else {
+      arrow.style.opacity = '0.4';
+      arrow.textContent = '▲▼';
+    }
+  });
+}
+
+// 정렬 적용
+function sortSongs(songs) {
+  const { key, dir } = currentSort;
+  return [...songs].sort((a, b) => {
+    let valA = a[key], valB = b[key];
+    if (key === 'level') {
+      return dir === 'asc' ? valA - valB : valB - valA;
+    }
+    valA = (valA || '').toLowerCase();
+    valB = (valB || '').toLowerCase();
+    if (valA < valB) return dir === 'asc' ? -1 : 1;
+    if (valA > valB) return dir === 'asc' ? 1 : -1;
+    return 0;
+  });
+}
+
+function applySort() {
+  const searchInput = document.getElementById('searchInput');
+  const query = (searchInput?.value || '').toLowerCase().trim();
+  let songs = window._allSongs || [];
+  if (query) {
+    songs = songs.filter(song =>
+      song.artist.toLowerCase().includes(query) || song.title.toLowerCase().includes(query)
+    );
+  }
+  renderSongTable(sortSongs(songs));
 }
 
 function renderSongTable(songs) {
