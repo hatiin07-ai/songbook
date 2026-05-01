@@ -65,6 +65,8 @@ function switchGenre(genre) {
   document.querySelectorAll('.genre-tab').forEach(tab => {
     tab.classList.toggle('active', tab.dataset.genre === genre);
   });
+  const searchInput = document.getElementById('adminSearchInput');
+  if (searchInput) searchInput.value = '';
   loadAdminSongs();
 }
 
@@ -94,14 +96,40 @@ async function loadAdminSongs() {
 
   adminSongsData = data;
   setupAdminSortHeaders();
+  setupAdminSearch();
   renderAdminTable();
+}
+
+// 어드민 검색창 셋업
+function setupAdminSearch() {
+  const tableContainer = document.querySelector('#adminScreen .bg-white.rounded-2xl');
+  if (!tableContainer || document.getElementById('adminSearchInput')) return;
+
+  const searchDiv = document.createElement('div');
+  searchDiv.style.cssText = 'padding:12px 16px; border-bottom:1px solid rgba(232,160,160,0.15);';
+  searchDiv.innerHTML = '<input type="text" id="adminSearchInput" placeholder="🔍 가수 또는 제목 검색..." ' +
+    'style="width:100%; max-width:320px; padding:8px 14px; border-radius:10px; border:1px solid rgba(232,160,160,0.3); ' +
+    'background:#FFF8F6; font-size:0.85rem; color:#3D3D3D; outline:none;" />';
+  tableContainer.insertBefore(searchDiv, tableContainer.firstChild);
+
+  document.getElementById('adminSearchInput').addEventListener('input', () => renderAdminTable());
+}
+
+function getAdminFilteredSongs() {
+  const query = (document.getElementById('adminSearchInput')?.value || '').toLowerCase().trim();
+  if (!query) return adminSongsData;
+  return adminSongsData.filter(song =>
+    song.artist.toLowerCase().includes(query) || song.title.toLowerCase().includes(query)
+  );
 }
 
 function renderAdminTable() {
   const tbody = document.getElementById('adminSongBody');
   const emptyEl = document.getElementById('adminEmpty');
 
-  if (!adminSongsData || adminSongsData.length === 0) {
+  const filtered = getAdminFilteredSongs();
+
+  if (!filtered || filtered.length === 0) {
     tbody.innerHTML = '';
     emptyEl.classList.remove('hidden');
     return;
@@ -109,7 +137,7 @@ function renderAdminTable() {
   emptyEl.classList.add('hidden');
 
   // 시그니처 먼저, 그 안에서 현재 정렬 적용
-  const sorted = sortAdminSongs(adminSongsData);
+  const sorted = sortAdminSongs(filtered);
 
   tbody.innerHTML = sorted.map(song => {
     const sigBg = song.is_signature ? 'background:#FFF0ED;' : '';
