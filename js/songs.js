@@ -193,7 +193,7 @@ function renderSongTable(songs) {
 
   if (emptyState) emptyState.style.display = 'none';
   tbody.innerHTML = songs.map((song, i) => {
-    const sigBadge = song.is_signature ? ' <span style="background:#D4727A; color:#fff; font-size:0.6rem; padding:1px 6px; border-radius:8px; margin-left:4px; vertical-align:middle;">🎀</span>' : '';
+    const sigBadge = song.is_signature ? ' <span style="background:#F5D5D5; color:#D4727A; font-size:0.6rem; padding:1px 6px; border-radius:8px; margin-left:4px; vertical-align:middle;">🎀</span>' : '';
     return '<tr style="border-bottom:1px solid rgba(232,160,160,0.15); background:' + (i % 2 === 0 ? '#ffffff' : '#FFF8F6') + ';">' +
     '<td style="padding:12px 16px; color:#3D3D3D; font-weight:500;">' + escapeHtml(song.artist) + sigBadge + '</td>' +
     '<td style="padding:12px 16px; color:#3D3D3D;">' + escapeHtml(song.title) + '</td>' +
