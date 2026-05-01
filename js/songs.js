@@ -21,10 +21,28 @@ function escapeHtml(text) {
   return div.innerHTML;
 }
 
-// 시그니처 카드 렌더링 (가로 행 리스트)
+// 시그니처 카드 렌더링 (가로 행 리스트, 모바일 2행)
 function renderSignatureCards(songs) {
   const section = document.getElementById('signatureSection');
   if (!section || !songs || songs.length === 0) return;
+
+  // 반응형 스타일 삽입
+  if (!document.getElementById('sigCardStyle')) {
+    const style = document.createElement('style');
+    style.id = 'sigCardStyle';
+    style.textContent =
+      '.sig-card { display:flex; align-items:center; gap:16px; }' +
+      '.sig-info { display:flex; align-items:center; gap:16px; flex:1; min-width:0; }' +
+      '.sig-artist { font-weight:700; color:#D4727A; font-size:0.85rem; min-width:100px; flex-shrink:0; }' +
+      '.sig-title { font-weight:600; color:#3D3D3D; font-size:0.95rem; flex:1; min-width:0; }' +
+      '@media (max-width: 640px) {' +
+        '.sig-card { flex-wrap:wrap; gap:8px; }' +
+        '.sig-info { flex-direction:column; align-items:flex-start; gap:2px; }' +
+        '.sig-artist { min-width:auto; font-size:0.8rem; }' +
+        '.sig-title { font-size:0.9rem; }' +
+      '}';
+    document.head.appendChild(style);
+  }
 
   section.style.display = 'block';
   section.className = 'mb-6';
@@ -35,12 +53,13 @@ function renderSignatureCards(songs) {
     '</div>' +
     '<div style="display:flex; flex-direction:column; gap:8px;">' +
     songs.map(song =>
-      '<div style="background:linear-gradient(135deg, #FFF0ED 0%, #FFF8F6 100%); border:1.5px solid #E8A0A0; border-radius:12px; padding:12px 20px; display:flex; align-items:center; gap:16px; position:relative; overflow:hidden;">' +
+      '<div class="sig-card" style="background:linear-gradient(135deg, #FFF0ED 0%, #FFF8F6 100%); border:1.5px solid #E8A0A0; border-radius:12px; padding:12px 20px; position:relative; overflow:hidden;">' +
         '<div style="position:absolute; top:-8px; right:-8px; font-size:2.5rem; opacity:0.06;">🎵</div>' +
-        '<div style="font-weight:700; color:#D4727A; font-size:0.85rem; min-width:100px;">' + escapeHtml(song.artist) + '</div>' +
-        '<div style="font-weight:600; color:#3D3D3D; font-size:0.95rem; flex:1;">' + escapeHtml(song.title) + '</div>' +
-        '<div style="letter-spacing:2px; font-size:0.8rem; min-width:90px; text-align:center;">' + renderStars(song.level) + '</div>' +
-        (song.memo ? '<div style="color:#8C8C8C; font-size:0.75rem; min-width:80px;">' + escapeHtml(song.memo) + '</div>' : '') +
+        '<div class="sig-info">' +
+          '<div class="sig-artist">' + escapeHtml(song.artist) + '</div>' +
+          '<div class="sig-title">' + escapeHtml(song.title) + '</div>' +
+        '</div>' +
+        '<div style="letter-spacing:2px; font-size:0.8rem; min-width:90px; text-align:center; flex-shrink:0;">' + renderStars(song.level) + '</div>' +
       '</div>'
     ).join('') +
     '</div>';
