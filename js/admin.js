@@ -153,7 +153,7 @@ function renderAdminTable() {
       '<td style="padding:12px 16px; text-align:center;">' + renderStarsAdmin(song.level) + '</td>' +
       '<td style="padding:12px 16px; color:#8C8C8C; font-size:0.8rem;">' + escapeHtml(song.memo) + '</td>' +
       '<td style="padding:12px 16px; text-align:center;">' +
-        '<div style="display:flex; gap:4px; justify-content:center; flex-wrap:wrap;">' +
+        '<div style="display:flex; gap:4px; justify-content:center; flex-wrap:nowrap;">' +
           '<button style="' + sigBtnStyle + ' font-size:0.7rem; padding:3px 8px; border-radius:6px; cursor:pointer; white-space:nowrap;" onclick="toggleSignature(' + song.id + ', ' + !song.is_signature + ')">' + sigBtnText + '</button>' +
           '<button class="btn-edit" onclick="openEditModal(' + song.id + ', \'' + escapeAttr(song.artist) + '\', \'' + escapeAttr(song.title) + '\', ' + song.level + ', \'' + escapeAttr(song.memo) + '\', ' + (song.is_signature || false) + ')">수정</button>' +
           '<button class="btn-delete" onclick="deleteSong(' + song.id + ')">삭제</button>' +
