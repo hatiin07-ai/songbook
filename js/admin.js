@@ -4,6 +4,8 @@
 
 let currentGenre = 'kpop';
 let currentUser = null;
+let adminSort = { key: 'artist', dir: 'asc' };
+let adminSongsData = [];
 
 document.addEventListener('DOMContentLoaded', async () => {
   const sb = initSupabase();
@@ -79,21 +81,40 @@ async function loadAdminSongs() {
     .from('songs')
     .select('*')
     .eq('genre', currentGenre)
-    .order('is_signature', { ascending: false })
     .order('artist', { ascending: true });
 
   loadingEl.classList.add('hidden');
 
   if (error || !data || data.length === 0) {
     tbody.innerHTML = '';
+    adminSongsData = [];
     emptyEl.classList.remove('hidden');
     return;
   }
 
-  tbody.innerHTML = data.map(song => {
+  adminSongsData = data;
+  setupAdminSortHeaders();
+  renderAdminTable();
+}
+
+function renderAdminTable() {
+  const tbody = document.getElementById('adminSongBody');
+  const emptyEl = document.getElementById('adminEmpty');
+
+  if (!adminSongsData || adminSongsData.length === 0) {
+    tbody.innerHTML = '';
+    emptyEl.classList.remove('hidden');
+    return;
+  }
+  emptyEl.classList.add('hidden');
+
+  // 시그니처 먼저, 그 안에서 현재 정렬 적용
+  const sorted = sortAdminSongs(adminSongsData);
+
+  tbody.innerHTML = sorted.map(song => {
     const sigBg = song.is_signature ? 'background:#FFF0ED;' : '';
-    const sigBadge = song.is_signature ? '<span style="background:#D4727A; color:#fff; font-size:0.65rem; padding:2px 6px; border-radius:8px; margin-left:4px;">\ud83c\udf80 \uc2dc\uadf8\ub2c8\ucc98</span>' : '';
-    const sigBtnText = song.is_signature ? '\u2606 \ud574\uc81c' : '\u2605 \uc2dc\uadf8\ub2c8\ucc98';
+    const sigBadge = song.is_signature ? '<span style="background:#D4727A; color:#fff; font-size:0.65rem; padding:2px 6px; border-radius:8px; margin-left:4px;">🎀 시그니처</span>' : '';
+    const sigBtnText = song.is_signature ? '☆ 해제' : '★ 시그니처';
     const sigBtnStyle = song.is_signature 
       ? 'background:#FFF0ED; color:#D4727A; border:1px solid #E8A0A0;'
       : 'background:#fff; color:#8C8C8C; border:1px solid #ddd;';
@@ -106,12 +127,84 @@ async function loadAdminSongs() {
       '<td style="padding:12px 16px; text-align:center;">' +
         '<div style="display:flex; gap:4px; justify-content:center; flex-wrap:wrap;">' +
           '<button style="' + sigBtnStyle + ' font-size:0.7rem; padding:3px 8px; border-radius:6px; cursor:pointer; white-space:nowrap;" onclick="toggleSignature(' + song.id + ', ' + !song.is_signature + ')">' + sigBtnText + '</button>' +
-          '<button class="btn-edit" onclick="openEditModal(' + song.id + ', \'' + escapeAttr(song.artist) + '\', \'' + escapeAttr(song.title) + '\', ' + song.level + ', \'' + escapeAttr(song.memo) + '\', ' + (song.is_signature || false) + ')">\uc218\uc815</button>' +
-          '<button class="btn-delete" onclick="deleteSong(' + song.id + ')">\uc0ad\uc81c</button>' +
+          '<button class="btn-edit" onclick="openEditModal(' + song.id + ', \'' + escapeAttr(song.artist) + '\', \'' + escapeAttr(song.title) + '\', ' + song.level + ', \'' + escapeAttr(song.memo) + '\', ' + (song.is_signature || false) + ')">수정</button>' +
+          '<button class="btn-delete" onclick="deleteSong(' + song.id + ')">삭제</button>' +
         '</div>' +
       '</td>' +
     '</tr>';
   }).join('');
+}
+
+// 어드민 정렬
+function sortAdminSongs(songs) {
+  const { key, dir } = adminSort;
+  return [...songs].sort((a, b) => {
+    // 시그니처 곡은 항상 최상단
+    if (a.is_signature && !b.is_signature) return -1;
+    if (!a.is_signature && b.is_signature) return 1;
+
+    let valA = a[key], valB = b[key];
+    if (key === 'level') {
+      return dir === 'asc' ? valA - valB : valB - valA;
+    }
+    valA = (valA || '').toLowerCase();
+    valB = (valB || '').toLowerCase();
+    if (valA < valB) return dir === 'asc' ? -1 : 1;
+    if (valA > valB) return dir === 'asc' ? 1 : -1;
+    return 0;
+  });
+}
+
+// 어드민 정렬 헤더 셋업
+function setupAdminSortHeaders() {
+  const headers = document.querySelectorAll('#adminScreen thead th');
+  const sortKeys = ['artist', 'title', 'level', null, null]; // 메모, 관리는 정렬 없음
+
+  headers.forEach((th, idx) => {
+    const key = sortKeys[idx];
+    if (!key) return;
+    if (th.getAttribute('data-sort-key')) return; // 이미 셋업됨
+
+    th.style.cursor = 'pointer';
+    th.style.userSelect = 'none';
+    th.setAttribute('data-sort-key', key);
+
+    const arrow = document.createElement('span');
+    arrow.className = 'sort-arrow';
+    arrow.style.marginLeft = '4px';
+    arrow.style.fontSize = '0.7rem';
+    arrow.style.opacity = '0.4';
+    arrow.textContent = '▲▼';
+    th.appendChild(arrow);
+
+    th.addEventListener('click', () => {
+      if (adminSort.key === key) {
+        adminSort.dir = adminSort.dir === 'asc' ? 'desc' : 'asc';
+      } else {
+        adminSort.key = key;
+        adminSort.dir = 'asc';
+      }
+      updateAdminSortArrows();
+      renderAdminTable();
+    });
+  });
+
+  updateAdminSortArrows();
+}
+
+function updateAdminSortArrows() {
+  document.querySelectorAll('#adminScreen thead th[data-sort-key]').forEach(th => {
+    const arrow = th.querySelector('.sort-arrow');
+    if (!arrow) return;
+    const key = th.getAttribute('data-sort-key');
+    if (key === adminSort.key) {
+      arrow.style.opacity = '1';
+      arrow.textContent = adminSort.dir === 'asc' ? '▲' : '▼';
+    } else {
+      arrow.style.opacity = '0.4';
+      arrow.textContent = '▲▼';
+    }
+  });
 }
 
 // \uc2dc\uadf8\ub2c8\ucc98 \ud1a0\uae00
