@@ -81,6 +81,9 @@ async function loadSongs(genre) {
     // 정렬 헤더 초기화
     setupSortHeaders();
 
+    // 랜덤뽑기 버튼 추가
+    setupRandomButton();
+
     // 검색 기능
     searchInput.addEventListener('input', (e) => {
       const query = e.target.value.toLowerCase().trim();
@@ -201,4 +204,73 @@ function renderSongTable(songs) {
     '<td style="padding:12px 16px; color:#8C8C8C; font-size:0.8rem;">' + escapeHtml(song.memo) + '</td>' +
     '</tr>';
   }).join('');
+}
+
+// 랜덤뽑기 버튼 셋업
+function setupRandomButton() {
+  const searchContainer = document.getElementById('searchInput')?.parentElement;
+  if (!searchContainer || document.getElementById('randomBtn')) return;
+
+  // 검색창과 버튼을 나란히 배치
+  searchContainer.style.display = 'flex';
+  searchContainer.style.alignItems = 'center';
+  searchContainer.style.gap = '8px';
+
+  const btn = document.createElement('button');
+  btn.id = 'randomBtn';
+  btn.textContent = '🎲 랜덤뽑기';
+  btn.style.cssText = 'padding:9px 16px; background:#D4727A; color:#fff; border:none; border-radius:12px; font-size:0.85rem; font-weight:600; cursor:pointer; white-space:nowrap; transition:background 0.2s;';
+  btn.addEventListener('mouseenter', () => btn.style.background = '#c4616a');
+  btn.addEventListener('mouseleave', () => btn.style.background = '#D4727A');
+  btn.addEventListener('click', showRandomPick);
+  searchContainer.appendChild(btn);
+}
+
+// 랜덤뽑기 팝업
+function showRandomPick() {
+  const songs = window._allSongs;
+  if (!songs || songs.length === 0) return;
+
+  const song = songs[Math.floor(Math.random() * songs.length)];
+
+  // 기존 팝업 제거
+  const old = document.getElementById('randomModal');
+  if (old) old.remove();
+
+  const overlay = document.createElement('div');
+  overlay.id = 'randomModal';
+  overlay.style.cssText = 'position:fixed; inset:0; background:rgba(0,0,0,0.4); display:flex; align-items:center; justify-content:center; z-index:9999; animation:fadeIn 0.2s ease;';
+
+  const card = document.createElement('div');
+  card.style.cssText = 'background:#fff; border-radius:20px; padding:32px 36px; max-width:360px; width:90%; text-align:center; position:relative; box-shadow:0 20px 60px rgba(0,0,0,0.15); animation:popIn 0.3s ease;';
+
+  card.innerHTML =
+    '<div style="font-size:2.5rem; margin-bottom:12px;">🎵</div>' +
+    '<div style="font-size:0.8rem; color:#D4727A; font-weight:700; margin-bottom:4px;">' + escapeHtml(song.artist) + '</div>' +
+    '<div style="font-size:1.2rem; color:#3D3D3D; font-weight:700; margin-bottom:12px;">' + escapeHtml(song.title) + '</div>' +
+    '<div style="letter-spacing:3px; margin-bottom:20px;">' + renderStars(song.level) + '</div>' +
+    '<div style="display:flex; gap:8px; justify-content:center;">' +
+      '<button id="randomAgainBtn" style="padding:8px 20px; background:#FFF0ED; color:#D4727A; border:1.5px solid #E8A0A0; border-radius:10px; font-size:0.8rem; font-weight:600; cursor:pointer;">🎲 다시 뽑기</button>' +
+      '<button id="randomCloseBtn" style="padding:8px 20px; background:#f5f5f5; color:#8C8C8C; border:1px solid #ddd; border-radius:10px; font-size:0.8rem; font-weight:600; cursor:pointer;">닫기</button>' +
+    '</div>';
+
+  overlay.appendChild(card);
+  document.body.appendChild(overlay);
+
+  // 팝업 애니메이션 스타일 삽입
+  if (!document.getElementById('randomModalStyle')) {
+    const style = document.createElement('style');
+    style.id = 'randomModalStyle';
+    style.textContent =
+      '@keyframes fadeIn { from { opacity:0 } to { opacity:1 } }' +
+      '@keyframes popIn { from { opacity:0; transform:scale(0.85) } to { opacity:1; transform:scale(1) } }';
+    document.head.appendChild(style);
+  }
+
+  document.getElementById('randomAgainBtn').addEventListener('click', () => {
+    overlay.remove();
+    showRandomPick();
+  });
+  document.getElementById('randomCloseBtn').addEventListener('click', () => overlay.remove());
+  overlay.addEventListener('click', (e) => { if (e.target === overlay) overlay.remove(); });
 }
