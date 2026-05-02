@@ -58,7 +58,7 @@ function renderSignatureCards(songs) {
     '<div style="display:flex; flex-direction:column; gap:8px;">' +
     songs.map(song =>
       '<div class="sig-card" style="background:linear-gradient(135deg, #FFF0ED 0%, #FFF8F6 100%); border:1.5px solid #E8A0A0; border-radius:12px; padding:12px 20px; position:relative; overflow:hidden;">' +
-        '<div style="position:absolute; top:-8px; right:-8px; font-size:2.5rem; opacity:0.06;">🎵</div>' +
+        '<div style="position:absolute; top:-8px; right:-8px; font-size:2.5rem; opacity:0.06; pointer-events:none;">🎵</div>' +
         '<div class="sig-info">' +
           '<div class="sig-artist">' + escapeHtml(song.artist) + '</div>' +
           '<div class="sig-title">' + escapeHtml(song.title) + '</div>' +
