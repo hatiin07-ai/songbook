@@ -21,6 +21,10 @@ function escapeHtml(text) {
   return div.innerHTML;
 }
 
+function escapeAttr(text) {
+  return (text || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/"/g, '&quot;');
+}
+
 // 시그니처 카드 렌더링 (가로 행 리스트, 모바일 2행)
 function renderSignatureCards(songs) {
   const section = document.getElementById('signatureSection');
@@ -218,7 +222,10 @@ function renderSongTable(songs) {
     const sigBadge = song.is_signature ? ' <span style="background:#F5D5D5; color:#D4727A; font-size:0.6rem; padding:1px 6px; border-radius:8px; margin-left:4px; vertical-align:middle;">🎀</span>' : '';
     return '<tr style="border-bottom:1px solid rgba(232,160,160,0.15); background:' + (i % 2 === 0 ? '#ffffff' : '#FFF8F6') + ';">' +
     '<td style="padding:12px 16px; color:#3D3D3D; font-weight:500;">' + escapeHtml(song.artist) + sigBadge + '</td>' +
-    '<td style="padding:12px 16px; color:#3D3D3D;">' + escapeHtml(song.title) + '</td>' +
+    '<td style="padding:12px 16px; color:#3D3D3D;">' + escapeHtml(song.title) +
+      ' <span class="copy-btn" onclick="copySongText(\'' + escapeAttr(song.artist) + '\', \'' + escapeAttr(song.title) + '\')" ' +
+      'style="cursor:pointer; opacity:0.3; font-size:0.7rem; vertical-align:middle; transition:opacity 0.15s;" ' +
+      'onmouseenter="this.style.opacity=\'0.8\'" onmouseleave="this.style.opacity=\'0.3\'" title="복사">📋</span></td>' +
     '<td style="padding:12px 16px; text-align:center; letter-spacing:2px;">' + renderStars(song.level) + '</td>' +
     '<td style="padding:12px 16px; color:#8C8C8C; font-size:0.8rem;">' + escapeHtml(song.memo) + '</td>' +
     '</tr>';
@@ -268,7 +275,8 @@ function showRandomPick() {
     '<div style="font-size:0.8rem; color:#D4727A; font-weight:700; margin-bottom:4px;">' + escapeHtml(song.artist) + '</div>' +
     '<div style="font-size:1.2rem; color:#3D3D3D; font-weight:700; margin-bottom:12px;">' + escapeHtml(song.title) + '</div>' +
     '<div style="letter-spacing:3px; margin-bottom:20px;">' + renderStars(song.level) + '</div>' +
-    '<div style="display:flex; gap:8px; justify-content:center;">' +
+    '<div style="display:flex; gap:8px; justify-content:center; flex-wrap:wrap;">' +
+      '<button id="randomCopyBtn" style="padding:8px 20px; background:#fff; color:#D4727A; border:1.5px solid #E8A0A0; border-radius:10px; font-size:0.8rem; font-weight:600; cursor:pointer;">📋 복사</button>' +
       '<button id="randomAgainBtn" style="padding:8px 20px; background:#FFF0ED; color:#D4727A; border:1.5px solid #E8A0A0; border-radius:10px; font-size:0.8rem; font-weight:600; cursor:pointer;">🎲 다시 뽑기</button>' +
       '<button id="randomCloseBtn" style="padding:8px 20px; background:#f5f5f5; color:#8C8C8C; border:1px solid #ddd; border-radius:10px; font-size:0.8rem; font-weight:600; cursor:pointer;">닫기</button>' +
     '</div>';
@@ -286,10 +294,34 @@ function showRandomPick() {
     document.head.appendChild(style);
   }
 
+  document.getElementById('randomCopyBtn').addEventListener('click', () => {
+    copySongText(song.artist, song.title);
+  });
   document.getElementById('randomAgainBtn').addEventListener('click', () => {
     overlay.remove();
     showRandomPick();
   });
   document.getElementById('randomCloseBtn').addEventListener('click', () => overlay.remove());
   overlay.addEventListener('click', (e) => { if (e.target === overlay) overlay.remove(); });
+}
+
+// 클립보드 복사
+function copySongText(artist, title) {
+  const text = artist + ' - ' + title;
+  navigator.clipboard.writeText(text).then(() => {
+    showCopyToast('복사됨! ✅');
+  }).catch(() => {
+    showCopyToast('복사 실패 😢');
+  });
+}
+
+function showCopyToast(msg) {
+  const old = document.getElementById('copyToast');
+  if (old) old.remove();
+  const toast = document.createElement('div');
+  toast.id = 'copyToast';
+  toast.textContent = msg;
+  toast.style.cssText = 'position:fixed; bottom:2rem; left:50%; transform:translateX(-50%); padding:10px 24px; background:#3D3D3D; color:#fff; border-radius:12px; font-size:0.85rem; font-weight:500; z-index:99999; animation:fadeIn 0.2s ease;';
+  document.body.appendChild(toast);
+  setTimeout(() => toast.remove(), 1500);
 }
