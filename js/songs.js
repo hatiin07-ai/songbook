@@ -64,6 +64,9 @@ function renderSignatureCards(songs) {
           '<div class="sig-title">' + escapeHtml(song.title) + '</div>' +
         '</div>' +
         '<div style="letter-spacing:2px; font-size:0.8rem; min-width:90px; text-align:center; flex-shrink:0;">' + renderStars(song.level) + '</div>' +
+        '<button onclick="copySongText(\'' + escapeAttr(song.artist) + '\', \'' + escapeAttr(song.title) + '\')" ' +
+        'style="padding:4px 10px; background:rgba(255,255,255,0.7); color:#D4727A; border:1px solid #E8A0A0; border-radius:8px; font-size:0.7rem; cursor:pointer; flex-shrink:0; transition:background 0.15s;" ' +
+        'onmouseenter="this.style.background=\'#F5D5D5\'" onmouseleave="this.style.background=\'rgba(255,255,255,0.7)\'">📋</button>' +
       '</div>'
     ).join('') +
     '</div>';
