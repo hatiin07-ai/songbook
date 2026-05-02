@@ -127,7 +127,7 @@ async function loadSongs(genre) {
 // 정렬 헤더 셋업
 function setupSortHeaders() {
   const headers = document.querySelectorAll('thead th');
-  const sortKeys = ['artist', 'title', 'level', null]; // 메모는 정렬 없음
+  const sortKeys = ['artist', 'title', 'level', null, null]; // 메모, 복사는 정렬 없음
 
   headers.forEach((th, idx) => {
     const key = sortKeys[idx];
@@ -222,12 +222,14 @@ function renderSongTable(songs) {
     const sigBadge = song.is_signature ? ' <span style="background:#F5D5D5; color:#D4727A; font-size:0.6rem; padding:1px 6px; border-radius:8px; margin-left:4px; vertical-align:middle;">🎀</span>' : '';
     return '<tr style="border-bottom:1px solid rgba(232,160,160,0.15); background:' + (i % 2 === 0 ? '#ffffff' : '#FFF8F6') + ';">' +
     '<td style="padding:12px 16px; color:#3D3D3D; font-weight:500;">' + escapeHtml(song.artist) + sigBadge + '</td>' +
-    '<td style="padding:12px 16px; color:#3D3D3D;">' + escapeHtml(song.title) +
-      ' <span class="copy-btn" onclick="copySongText(\'' + escapeAttr(song.artist) + '\', \'' + escapeAttr(song.title) + '\')" ' +
-      'style="cursor:pointer; opacity:0.3; font-size:0.7rem; vertical-align:middle; transition:opacity 0.15s;" ' +
-      'onmouseenter="this.style.opacity=\'0.8\'" onmouseleave="this.style.opacity=\'0.3\'" title="복사">📋</span></td>' +
+    '<td style="padding:12px 16px; color:#3D3D3D;">' + escapeHtml(song.title) + '</td>' +
     '<td style="padding:12px 16px; text-align:center; letter-spacing:2px;">' + renderStars(song.level) + '</td>' +
     '<td style="padding:12px 16px; color:#8C8C8C; font-size:0.8rem;">' + escapeHtml(song.memo) + '</td>' +
+    '<td style="padding:12px 16px; text-align:center;">' +
+      '<button onclick="copySongText(\'' + escapeAttr(song.artist) + '\', \'' + escapeAttr(song.title) + '\')" ' +
+      'style="padding:4px 10px; background:#FFF0ED; color:#D4727A; border:1px solid #E8A0A0; border-radius:8px; font-size:0.7rem; cursor:pointer; transition:background 0.15s;" ' +
+      'onmouseenter="this.style.background=\'#F5D5D5\'" onmouseleave="this.style.background=\'#FFF0ED\'">📋</button>' +
+    '</td>' +
     '</tr>';
   }).join('');
 }
