@@ -77,12 +77,25 @@
 
     <main class="max-w-5xl mx-auto px-4 py-6">
 
-      <!-- Genre Tabs -->
-      <div class="flex gap-2 mb-6">
-        <button class="genre-tab active" data-genre="kpop">🎀 Kpop</button>
-        <button class="genre-tab" data-genre="jpop">🌸 Jpop</button>
-        <button class="genre-tab" data-genre="pop">🎶 Pop</button>
-        <button class="genre-tab" data-genre="aegyo">💕 애교송</button>
+      <!-- Genre Tabs + Overlay Control -->
+      <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
+        <div class="flex gap-2">
+          <button class="genre-tab active" data-genre="kpop">🎀 Kpop</button>
+          <button class="genre-tab" data-genre="jpop">🌸 Jpop</button>
+          <button class="genre-tab" data-genre="pop">🎶 Pop</button>
+          <button class="genre-tab" data-genre="aegyo">💕 애교송</button>
+        </div>
+
+        <!-- Overlay Control -->
+        <div class="flex items-center gap-2 bg-white rounded-xl border border-point/20 px-3 py-2">
+          <span class="text-xs text-sub whitespace-nowrap">🎤 오버레이</span>
+          <span id="overlayStatus" class="text-[0.625rem] px-2 py-0.5 rounded-full bg-gray-100 text-sub font-medium">OFF</span>
+          <input type="text" id="overlayTitle" placeholder="곡 제목" class="px-2 py-1 text-xs border border-point/20 rounded-lg bg-bg w-28 focus:outline-none focus:border-accent">
+          <input type="text" id="overlayArtist" placeholder="아티스트" class="px-2 py-1 text-xs border border-point/20 rounded-lg bg-bg w-24 focus:outline-none focus:border-accent">
+          <button onclick="publishOverlay()" class="px-3 py-1 text-xs bg-accent text-white rounded-lg hover:bg-accent/80 transition whitespace-nowrap">표시</button>
+          <button onclick="hideOverlay()" class="px-3 py-1 text-xs bg-white border border-accent text-accent rounded-lg hover:bg-accent hover:text-white transition whitespace-nowrap">숨기기</button>
+          <button onclick="copyOverlayUrl()" class="px-2 py-1 text-xs text-sub border border-gray-200 rounded-lg hover:border-accent hover:text-accent transition" title="OBS URL 복사">📋</button>
+        </div>
       </div>
 
       <!-- Add Song Form -->
@@ -141,9 +154,10 @@
             <thead class="bg-thead">
               <tr>
                 <th class="text-left px-4 py-3 font-semibold text-txt w-[15%]">가수</th>
-                <th class="text-left px-4 py-3 font-semibold text-txt w-[25%]">제목</th>
-                <th class="text-center px-4 py-3 font-semibold text-txt w-[12%]">숙련도</th>
-                <th class="text-left px-4 py-3 font-semibold text-txt w-[18%]">메모</th>
+                <th class="text-left px-4 py-3 font-semibold text-txt w-[22%]">제목</th>
+                <th class="text-center px-4 py-3 font-semibold text-txt w-[10%]">숙련도</th>
+                <th class="text-left px-4 py-3 font-semibold text-txt w-[15%]">메모</th>
+                <th class="text-center px-4 py-3 font-semibold text-txt w-[8%]">오버레이</th>
                 <th class="text-center px-4 py-3 font-semibold text-txt w-[30%]">관리</th>
               </tr>
             </thead>

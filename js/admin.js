@@ -7,6 +7,12 @@ let currentUser = null;
 let adminSort = { key: 'artist', dir: 'asc' };
 let adminSongsData = [];
 
+// QP Main Supabase (overlay_state table)
+const overlayClient = supabase.createClient(
+  'https://uhzmyfvmkndrzzyeorwd.supabase.co',
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVoem15ZnZta25kcnp6eWVvcndkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgwMjkxNDEsImV4cCI6MjA5MzYwNTE0MX0.2SRfY8nUevM6yV7E3rgguyUqJt69L_zFqGuXTn-daGg'
+);
+
 document.addEventListener('DOMContentLoaded', async () => {
   const sb = initSupabase();
   const { data: { session } } = await sb.auth.getSession();
@@ -58,6 +64,7 @@ function showAdminScreen() {
   document.getElementById('adminScreen').classList.remove('hidden');
   document.getElementById('userEmail').textContent = currentUser.email;
   loadAdminSongs();
+  loadOverlayState();
 }
 
 function switchGenre(genre) {
@@ -152,6 +159,9 @@ function renderAdminTable() {
       '<td style="padding:12px 16px; color:#3D3D3D;">' + escapeHtml(song.title) + '</td>' +
       '<td style="padding:12px 16px; text-align:center;">' + renderStarsAdmin(song.level) + '</td>' +
       '<td style="padding:12px 16px; color:#8C8C8C; font-size:0.8rem;">' + escapeHtml(song.memo) + '</td>' +
+      '<td style="padding:12px 16px; text-align:center;">' +
+        '<button style="font-size:0.65rem; padding:3px 8px; border-radius:6px; cursor:pointer; background:#FFF0ED; color:#D4727A; border:1px solid #E8A0A0; white-space:nowrap;" onclick="setOverlayFromSong(\'' + escapeAttr(song.title) + '\', \'' + escapeAttr(song.artist) + '\')">🎤</button>' +
+      '</td>' +
       '<td style="padding:12px 16px; text-align:center;">' +
         '<div style="display:flex; gap:4px; justify-content:center; flex-wrap:nowrap;">' +
           '<button style="' + sigBtnStyle + ' font-size:0.7rem; padding:3px 8px; border-radius:6px; cursor:pointer; white-space:nowrap;" onclick="toggleSignature(' + song.id + ', ' + !song.is_signature + ')">' + sigBtnText + '</button>' +
@@ -373,4 +383,86 @@ function escapeHtml(text) {
 
 function escapeAttr(text) {
   return (text || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
+}
+
+// ============================================
+// 🎤 Overlay Control
+// ============================================
+
+async function loadOverlayState() {
+  try {
+    const { data } = await overlayClient.from('overlay_state').select('*').eq('id', 1).single();
+    if (data && data.is_visible) {
+      document.getElementById('overlayTitle').value = data.song_title || '';
+      document.getElementById('overlayArtist').value = data.song_artist || '';
+      document.getElementById('overlayStatus').textContent = 'ON';
+      document.getElementById('overlayStatus').className = 'text-[0.625rem] px-2 py-0.5 rounded-full bg-green-100 text-green-700 font-medium';
+    }
+  } catch(e) { console.error('Overlay state load error:', e); }
+}
+
+function setOverlayFromSong(title, artist) {
+  document.getElementById('overlayTitle').value = title;
+  document.getElementById('overlayArtist').value = artist;
+  publishOverlay();
+}
+
+async function publishOverlay() {
+  const title = document.getElementById('overlayTitle').value.trim();
+  const artist = document.getElementById('overlayArtist').value.trim();
+  if (!title) { showToast('곡 제목을 입력하세요'); return; }
+
+  // Need to auth with qpmain supabase to update
+  // overlay_state has anon read but auth-only write
+  // Use songbook auth session to sign into qpmain too
+  const sb = initSupabase();
+  const { data: { session } } = await sb.auth.getSession();
+  if (session) {
+    await overlayClient.auth.setSession({
+      access_token: session.access_token,
+      refresh_token: session.refresh_token
+    });
+  }
+
+  try {
+    const { error } = await overlayClient.from('overlay_state')
+      .update({ song_title: title, song_artist: artist, is_visible: true })
+      .eq('id', 1);
+    if (error) throw error;
+    document.getElementById('overlayStatus').textContent = 'ON';
+    document.getElementById('overlayStatus').className = 'text-[0.625rem] px-2 py-0.5 rounded-full bg-green-100 text-green-700 font-medium';
+    showToast('🎤 오버레이: ' + title);
+  } catch(e) {
+    console.error(e);
+    showToast('오버레이 업데이트 실패: ' + e.message);
+  }
+}
+
+async function hideOverlay() {
+  const sb = initSupabase();
+  const { data: { session } } = await sb.auth.getSession();
+  if (session) {
+    await overlayClient.auth.setSession({
+      access_token: session.access_token,
+      refresh_token: session.refresh_token
+    });
+  }
+
+  try {
+    const { error } = await overlayClient.from('overlay_state')
+      .update({ is_visible: false })
+      .eq('id', 1);
+    if (error) throw error;
+    document.getElementById('overlayStatus').textContent = 'OFF';
+    document.getElementById('overlayStatus').className = 'text-[0.625rem] px-2 py-0.5 rounded-full bg-gray-100 text-sub font-medium';
+    showToast('오버레이 숨김');
+  } catch(e) {
+    console.error(e);
+    showToast('오버레이 숨기기 실패');
+  }
+}
+
+function copyOverlayUrl() {
+  const url = 'https://qpmain.pages.dev/overlay/';
+  navigator.clipboard.writeText(url).then(() => showToast('📋 오버레이 URL 복사됨'));
 }
