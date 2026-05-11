@@ -442,3 +442,70 @@ function copyOverlayUrl() {
   const url = 'https://qpmain.pages.dev/overlay/';
   navigator.clipboard.writeText(url).then(() => showToast('📋 오버레이 URL 복사됨'));
 }
+
+// ============================================
+// 🎲 Random Pick + Overlay
+// ============================================
+
+async function adminRandomPick() {
+  // Fetch all songs across all genres
+  const sb = initSupabase();
+  const { data, error } = await sb.from('songs').select('id,title,artist,genre,level');
+  if (error || !data || data.length === 0) {
+    showToast('노래 데이터를 불러올 수 없습니다');
+    return;
+  }
+
+  const song = data[Math.floor(Math.random() * data.length)];
+
+  // Remove existing modal
+  const old = document.getElementById('adminRandomModal');
+  if (old) old.remove();
+
+  const genreLabels = { kpop: '🎀 Kpop', jpop: '🌸 Jpop', pop: '🎶 Pop', aegyo: '💕 애교송' };
+
+  const overlay = document.createElement('div');
+  overlay.id = 'adminRandomModal';
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.4);display:flex;align-items:center;justify-content:center;z-index:9999;animation:fadeIn .2s ease;';
+
+  const card = document.createElement('div');
+  card.style.cssText = 'background:#FFF8F6;border-radius:20px;padding:32px 36px;max-width:400px;width:90%;text-align:center;position:relative;box-shadow:0 20px 60px rgba(0,0,0,0.15);animation:popIn .3s ease;';
+
+  card.innerHTML =
+    '<div style="font-size:2.5rem;margin-bottom:12px;">🎲</div>' +
+    '<div style="font-size:0.7rem;color:#8C8C8C;margin-bottom:8px;">' + (genreLabels[song.genre] || song.genre) + '</div>' +
+    '<div style="font-size:0.9rem;color:#D4727A;font-weight:700;margin-bottom:4px;">' + escapeHtml(song.artist) + '</div>' +
+    '<div style="font-size:1.3rem;color:#3D3D3D;font-weight:700;margin-bottom:8px;">' + escapeHtml(song.title) + '</div>' +
+    '<div style="letter-spacing:3px;margin-bottom:20px;">' + renderStarsAdmin(song.level) + '</div>' +
+    '<div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;">' +
+      '<button id="rndOverlayBtn" style="padding:8px 20px;background:#D4727A;color:#fff;border:none;border-radius:10px;font-size:0.8rem;font-weight:600;cursor:pointer;">🎤 오버레이 적용</button>' +
+      '<button id="rndAgainBtn" style="padding:8px 20px;background:#FFF0ED;color:#D4727A;border:1.5px solid #E8A0A0;border-radius:10px;font-size:0.8rem;font-weight:600;cursor:pointer;">🎲 다시 뽑기</button>' +
+      '<button id="rndCloseBtn" style="padding:8px 20px;background:#f5f5f5;color:#8C8C8C;border:1px solid #ddd;border-radius:10px;font-size:0.8rem;font-weight:600;cursor:pointer;">닫기</button>' +
+    '</div>';
+
+  overlay.appendChild(card);
+  document.body.appendChild(overlay);
+
+  // Popup animation styles
+  if (!document.getElementById('adminRandomStyle')) {
+    const style = document.createElement('style');
+    style.id = 'adminRandomStyle';
+    style.textContent =
+      '@keyframes fadeIn{from{opacity:0}to{opacity:1}}' +
+      '@keyframes popIn{from{opacity:0;transform:scale(0.85)}to{opacity:1;transform:scale(1)}}';
+    document.head.appendChild(style);
+  }
+
+  document.getElementById('rndOverlayBtn').addEventListener('click', () => {
+    document.getElementById('overlayTitle').value = song.title;
+    document.getElementById('overlayArtist').value = song.artist;
+    publishOverlay();
+    overlay.remove();
+  });
+  document.getElementById('rndAgainBtn').addEventListener('click', () => {
+    overlay.remove();
+    adminRandomPick();
+  });
+  document.getElementById('rndCloseBtn').addEventListener('click', () => overlay.remove());
+  overlay.addEventListener('click', (e) => { if (e.target === overlay) overlay.remove(); });
+}
