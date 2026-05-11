@@ -7,12 +7,6 @@ let currentUser = null;
 let adminSort = { key: 'artist', dir: 'asc' };
 let adminSongsData = [];
 
-// QP Main Supabase (overlay_state table)
-const overlayClient = supabase.createClient(
-  'https://uhzmyfvmkndrzzyeorwd.supabase.co',
-  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVoem15ZnZta25kcnp6eWVvcndkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgwMjkxNDEsImV4cCI6MjA5MzYwNTE0MX0.2SRfY8nUevM6yV7E3rgguyUqJt69L_zFqGuXTn-daGg'
-);
-
 document.addEventListener('DOMContentLoaded', async () => {
   const sb = initSupabase();
   const { data: { session } } = await sb.auth.getSession();
@@ -391,7 +385,8 @@ function escapeAttr(text) {
 
 async function loadOverlayState() {
   try {
-    const { data } = await overlayClient.from('overlay_state').select('*').eq('id', 1).single();
+    const sb = initSupabase();
+    const { data } = await sb.from('overlay_state').select('*').eq('id', 1).single();
     if (data && data.is_visible) {
       document.getElementById('overlayTitle').value = data.song_title || '';
       document.getElementById('overlayArtist').value = data.song_artist || '';
@@ -412,20 +407,9 @@ async function publishOverlay() {
   const artist = document.getElementById('overlayArtist').value.trim();
   if (!title) { showToast('곡 제목을 입력하세요'); return; }
 
-  // Need to auth with qpmain supabase to update
-  // overlay_state has anon read but auth-only write
-  // Use songbook auth session to sign into qpmain too
-  const sb = initSupabase();
-  const { data: { session } } = await sb.auth.getSession();
-  if (session) {
-    await overlayClient.auth.setSession({
-      access_token: session.access_token,
-      refresh_token: session.refresh_token
-    });
-  }
-
   try {
-    const { error } = await overlayClient.from('overlay_state')
+    const sb = initSupabase();
+    const { error } = await sb.from('overlay_state')
       .update({ song_title: title, song_artist: artist, is_visible: true })
       .eq('id', 1);
     if (error) throw error;
@@ -439,17 +423,9 @@ async function publishOverlay() {
 }
 
 async function hideOverlay() {
-  const sb = initSupabase();
-  const { data: { session } } = await sb.auth.getSession();
-  if (session) {
-    await overlayClient.auth.setSession({
-      access_token: session.access_token,
-      refresh_token: session.refresh_token
-    });
-  }
-
   try {
-    const { error } = await overlayClient.from('overlay_state')
+    const sb = initSupabase();
+    const { error } = await sb.from('overlay_state')
       .update({ is_visible: false })
       .eq('id', 1);
     if (error) throw error;
