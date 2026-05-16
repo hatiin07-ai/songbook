@@ -4,6 +4,8 @@
 
 // 정렬 상태
 let currentSort = { key: 'artist', dir: 'asc' };
+let currentPage = 1;
+const PAGE_BASE = 23; // 시그니처 포함 기준 총 행 수
 
 function renderStars(level) {
   let html = '';
@@ -113,11 +115,12 @@ async function loadSongs(genre) {
     // 검색 기능
     searchInput.addEventListener('input', (e) => {
       const query = e.target.value.toLowerCase().trim();
-      if (!query) { renderSongTable(sortSongs(window._allSongs)); return; }
+      currentPage = 1;
+      if (!query) { renderSongTable(sortSongs(window._allSongs), 1); return; }
       const filtered = window._allSongs.filter(song =>
         song.artist.toLowerCase().includes(query) || song.title.toLowerCase().includes(query)
       );
-      renderSongTable(sortSongs(filtered));
+      renderSongTable(sortSongs(filtered), 1);
     });
 
   } catch (err) {
@@ -205,23 +208,38 @@ function applySort() {
       song.artist.toLowerCase().includes(query) || song.title.toLowerCase().includes(query)
     );
   }
-  renderSongTable(sortSongs(songs));
+  currentPage = 1;
+  renderSongTable(sortSongs(songs), 1);
 }
 
-function renderSongTable(songs) {
+function getPageSize() {
+  const sigCount = document.querySelectorAll('#signatureSection .sig-card').length || 0;
+  return Math.max(5, PAGE_BASE - sigCount);
+}
+
+function renderSongTable(songs, page) {
   const tbody = document.getElementById('songTableBody');
   const emptyState = document.getElementById('emptyState');
 
   if (!songs || songs.length === 0) {
     tbody.innerHTML = '';
-    // 시그니처 곡이 있으면 empty state 안 보여줌
     const hasSig = document.getElementById('signatureSection')?.style.display === 'block';
     if (emptyState && !hasSig) emptyState.style.display = 'block';
+    renderPagination(0, 0);
     return;
   }
 
   if (emptyState) emptyState.style.display = 'none';
-  tbody.innerHTML = songs.map((song, i) => {
+
+  const pageSize = getPageSize();
+  const totalPages = Math.ceil(songs.length / pageSize);
+  currentPage = page ? Math.min(Math.max(1, page), totalPages) : currentPage;
+  currentPage = Math.min(currentPage, totalPages);
+
+  const start = (currentPage - 1) * pageSize;
+  const pageSongs = songs.slice(start, start + pageSize);
+
+  tbody.innerHTML = pageSongs.map((song, i) => {
     const sigBadge = song.is_signature ? ' <span style="background:#F5D5D5; color:#D4727A; font-size:0.6rem; padding:1px 6px; border-radius:8px; margin-left:4px; vertical-align:middle;">🎀</span>' : '';
     return '<tr style="border-bottom:1px solid rgba(232,160,160,0.15); background:' + (i % 2 === 0 ? '#ffffff' : '#FFF8F6') + ';">' +
     '<td style="padding:12px 16px; color:#3D3D3D; font-weight:500;">' + escapeHtml(song.artist) + sigBadge + '</td>' +
@@ -235,6 +253,40 @@ function renderSongTable(songs) {
     '</td>' +
     '</tr>';
   }).join('');
+
+  renderPagination(totalPages, currentPage);
+  window._currentFilteredSongs = songs;
+}
+
+function renderPagination(totalPages, page) {
+  let el = document.getElementById('songPagination');
+  if (!el) {
+    el = document.createElement('div');
+    el.id = 'songPagination';
+    el.style.cssText = 'display:flex; align-items:center; justify-content:center; gap:6px; padding:16px 0 8px; flex-wrap:wrap;';
+    document.getElementById('songTableBody')?.closest('table')?.after(el);
+  }
+
+  if (totalPages <= 1) { el.innerHTML = ''; return; }
+
+  let html = '';
+  for (let i = 1; i <= totalPages; i++) {
+    const isActive = i === page;
+    html += '<button onclick="goToPage(' + i + ')" style="' +
+      'width:32px; height:32px; border-radius:8px; border:1px solid ' + (isActive ? '#D4727A' : '#E8A0A0') + ';' +
+      'background:' + (isActive ? '#D4727A' : '#fff') + ';' +
+      'color:' + (isActive ? '#fff' : '#D4727A') + ';' +
+      'font-size:0.8rem; font-weight:' + (isActive ? '700' : '500') + ';' +
+      'cursor:pointer; transition:all 0.2s;">' + i + '</button>';
+  }
+  el.innerHTML = html;
+}
+
+function goToPage(page) {
+  currentPage = page;
+  renderSongTable(window._currentFilteredSongs || window._allSongs, page);
+  // 테이블 상단으로 부드럽게 스크롤
+  document.getElementById('searchInput')?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
 
 // 랜덤뽑기 버튼 셋업
