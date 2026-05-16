@@ -270,7 +270,7 @@ function showRandomPick() {
 
   const overlay = document.createElement('div');
   overlay.id = 'randomModal';
-  overlay.style.cssText = 'position:fixed; inset:0; background:rgba(0,0,0,0.4); display:flex; align-items:center; justify-content:center; z-index:9999; animation:fadeIn 0.2s ease;';
+  overlay.style.cssText = 'position:fixed; inset:0; background:rgba(0,0,0,0.4); display:flex; align-items:flex-start; justify-content:center; padding-top:200px; z-index:9999; animation:fadeIn 0.2s ease;';
 
   const card = document.createElement('div');
   card.style.cssText = 'background:#fff; border-radius:20px; padding:32px 36px; max-width:360px; width:90%; text-align:center; position:relative; box-shadow:0 20px 60px rgba(0,0,0,0.15); animation:popIn 0.3s ease;';
